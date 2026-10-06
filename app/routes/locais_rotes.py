@@ -80,11 +80,22 @@ def criar_ponto_turistico():
     Throws:
         Retorna no JSON as exceções que ocorrerem das funções chamadas no escopo try.
     """
-
     dados = request.json
     
-    # Validação do campo descrição
-    if dados.get('descricao') and len(dados.get('descricao')) > 200:
+    # Validação de campos obrigatórios
+    campos_obrigatorios = {
+        'titulo': 'Título', 'tipo': 'Categoria', 'categoria': 'Subcategoria',
+        'endereco': 'Endereço', 'capa': 'URL da Imagem', 'hra_funcionamento': 'Horário de Funcionamento',
+        'localiza_long': 'Longitude', 'localiza_lat': 'Latitude', 'descricao': 'Descrição',
+        'detalhes': 'Detalhes'
+    }
+
+    for campo_chave, campo_nome in campos_obrigatorios.items():
+        if campo_chave not in dados or not str(dados[campo_chave]).strip():
+            return jsonify({'mensagem': f'O campo "{campo_nome}" é obrigatório.'}), 400
+
+    # Validação do tamanho do campo descrição
+    if len(dados.get('descricao')) > 200:
         return jsonify({'mensagem': 'O campo descrição não pode exceder 200 caracteres.'}), 400
 
     try:
@@ -104,8 +115,20 @@ def editar_ponto_turistico(id):
     """
     dados = request.json
     
-    # Validação do campo descrição
-    if dados.get('descricao') and len(dados.get('descricao')) > 200:
+    # Validação de campos obrigatórios
+    campos_obrigatorios = {
+        'titulo': 'Título', 'tipo': 'Categoria', 'categoria': 'Subcategoria',
+        'endereco': 'Endereço', 'capa': 'URL da Imagem', 'hra_funcionamento': 'Horário de Funcionamento',
+        'localiza_long': 'Longitude', 'localiza_lat': 'Latitude', 'descricao': 'Descrição',
+        'detalhes': 'Detalhes'
+    }
+
+    for campo_chave, campo_nome in campos_obrigatorios.items():
+        if campo_chave not in dados or not str(dados[campo_chave]).strip():
+            return jsonify({'mensagem': f'O campo "{campo_nome}" é obrigatório.'}), 400
+
+    # Validação do tamanho do campo descrição
+    if len(dados.get('descricao')) > 200:
         return jsonify({'mensagem': 'O campo descrição não pode exceder 200 caracteres.'}), 400
         
     try:
@@ -143,11 +166,23 @@ def criar_estabelecimento():
         Retorna no JSON as exceções que ocorrerem das funções chamadas no escopo try.
     """
     dados = request.json
+    # Validação
+    campos_obrigatorios = {
+        'titulo': 'Título', 'tipo': 'Categoria', 'categoria': 'Subcategoria', 'descricao': 'Descrição', 'detalhes': 'Detalhes', 'endereco': 'Endereço', 'capa': 'URL da Imagem'
+    }
+    for campo_chave, campo_nome in campos_obrigatorios.items():
+        if campo_chave not in dados or not str(dados[campo_chave]).strip():
+            return jsonify({'mensagem': f'O campo "{campo_nome}" é obrigatório.'}), 400
+    
+    if len(dados.get('descricao', '')) > 200:
+        return jsonify({'mensagem': 'O campo descrição não pode exceder 200 caracteres.'}), 400
+
     try:
         novo_id = controller.inserir_estabelecimento(dados)
-        return jsonify({'id': novo_id}), 201
+        return jsonify({'id': novo_id, 'mensagem': 'Estabelecimento criado com sucesso'}), 201
     except Exception as e:
         return jsonify({'mensagem': str(e)}), 500
+
 
 @locais_bp.route('/estabelecimentos/<int:id>', methods=['PUT'])
 def editar_estabelecimento(id):
@@ -159,6 +194,24 @@ def editar_estabelecimento(id):
         Retorna no JSON as exceções que ocorrerem das funções chamadas no escopo try.
     """
     dados = request.json
+
+    # Validação mais completa
+    campos_obrigatorios = {
+        'titulo': 'Título', 
+        'tipo': 'Categoria', 
+        'categoria': 'Subcategoria', 
+        'descricao': 'Descrição', 
+        'detalhes': 'Detalhes', 
+        'endereco': 'Endereço', 
+        'capa': 'URL da Imagem'
+    }
+    for campo_chave, campo_nome in campos_obrigatorios.items():
+        if campo_chave not in dados or not str(dados.get(campo_chave, '')).strip():
+            return jsonify({'mensagem': f'O campo "{campo_nome}" é obrigatório.'}), 400
+            
+    if len(dados.get('descricao', '')) > 200:
+        return jsonify({'mensagem': 'O campo descrição não pode exceder 200 caracteres.'}), 400
+
     try:
         linhas = controller.atualizar_estabelecimento(id, dados)
         if linhas:

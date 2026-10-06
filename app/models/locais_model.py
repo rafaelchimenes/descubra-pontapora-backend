@@ -129,7 +129,7 @@ def listar_estabelecimentos(categoria=None, subcategoria=None):
         SELECT locais.*, img.caminho AS capa
         FROM locais
         LEFT JOIN imagens img ON img.tipo_origem = 'L' 
-            AND img.origem_id = locais.id 
+            AND img.origem_id = locais.id AND img.capa = 1
         WHERE locais.grupo = 'E' 
     """
     
@@ -167,9 +167,9 @@ def inserir_ponto_turistico(dados):
     sql = """
         INSERT INTO locais (
             titulo, descricao, detalhes, tipo, categoria, endereco, 
-            localiza_long, localiza_lat, hra_funcionamento, grupo
+            localiza_long, localiza_lat, hra_funcionamento, site, grupo
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'T')
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'T')
     """
     cursor.execute(sql, (
         dados.get('titulo'),
@@ -180,7 +180,8 @@ def inserir_ponto_turistico(dados):
         dados.get('endereco'),
         dados.get('localiza_long'),
         dados.get('localiza_lat'),
-        dados.get('hra_funcionamento')
+        dados.get('hra_funcionamento'),
+        dados.get('site')
     ))
     conexao.commit()
     id_inserido = cursor.lastrowid
@@ -203,7 +204,7 @@ def atualizar_ponto_turistico(id, dados):
         UPDATE locais 
         SET 
             titulo = %s, descricao = %s, detalhes = %s, tipo = %s, categoria = %s, 
-            endereco = %s, localiza_long = %s, localiza_lat = %s, hra_funcionamento = %s
+            endereco = %s, localiza_long = %s, localiza_lat = %s, hra_funcionamento = %s, site = %s
         WHERE id = %s AND grupo = 'T'
     """
     cursor.execute(sql, (
@@ -216,6 +217,7 @@ def atualizar_ponto_turistico(id, dados):
         dados.get('localiza_long'),
         dados.get('localiza_lat'),
         dados.get('hra_funcionamento'),
+        dados.get('site'),
         id
     ))
     conexao.commit()
@@ -251,14 +253,29 @@ def inserir_estabelecimento(dados):
     conexao = conectar()
     cursor = conexao.cursor()
     sql = """
-        INSERT INTO locais (titulo, descricao, tipo, categoria, grupo)
-        VALUES (%s, %s, %s, %s, 'E')
+        INSERT INTO locais (
+            titulo, descricao, detalhes, tipo, categoria, endereco,
+            localiza_long, localiza_lat, hra_funcionamento, site, grupo
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'E')
     """
+    # Sanitiza campos que podem ser nulos para o banco de dados
+    lat = dados.get('localiza_lat')
+    lon = dados.get('localiza_long')
+    localiza_lat = lat if str(lat).strip() else None
+    localiza_long = lon if str(lon).strip() else None
+
     cursor.execute(sql, (
         dados.get('titulo'),
         dados.get('descricao'),
+        dados.get('detalhes'),
         dados.get('tipo'),
-        dados.get('categoria')
+        dados.get('categoria'),
+        dados.get('endereco'),
+        localiza_long,
+        localiza_lat,
+        dados.get('hra_funcionamento'),
+        dados.get('site')
     ))
     conexao.commit()
     id_inserido = cursor.lastrowid
@@ -282,21 +299,33 @@ def atualizar_estabelecimento(id, dados):
         SET 
             titulo = %s, 
             descricao = %s, 
+            detalhes = %s,
             tipo = %s, 
             categoria = %s,
             endereco = %s,
             hra_funcionamento = %s,
-            site = %s
+            site = %s,
+            localiza_lat = %s,
+            localiza_long = %s
         WHERE id = %s AND grupo = 'E'
     """
+    # Sanitiza campos que podem ser nulos para o banco de dados
+    lat = dados.get('localiza_lat')
+    lon = dados.get('localiza_long')
+    localiza_lat = lat if str(lat).strip() else None
+    localiza_long = lon if str(lon).strip() else None
+
     cursor.execute(sql, (
         dados.get('titulo'),
         dados.get('descricao'),
+        dados.get('detalhes'),
         dados.get('tipo'),
         dados.get('categoria'),     
         dados.get('endereco'),
         dados.get('hra_funcionamento'),
         dados.get('site'),
+        localiza_lat,
+        localiza_long,
         id
     ))
     conexao.commit()
@@ -322,4 +351,3 @@ def deletar_estabelecimento(id):
     cursor.close()
     conexao.close()
     return linhas_afetadas
-
