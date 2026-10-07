@@ -12,7 +12,9 @@ def start_app():
         "https://45.182.18.133:*",
         "http://descubrapontapora.com.br:*",
         "https://descubrapontapora.com.br:*",
-        "http://127.0.0.1:*"
+        "http://127.0.0.1:*",
+        "http://localhost:*",
+        "https://localhost:*"
     ])
     iniciar_rotas(app)
     
